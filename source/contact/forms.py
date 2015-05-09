@@ -1,6 +1,6 @@
 from django.forms import ModelForm
-from django import forms
 from .models import ContactForm
+from django import forms
 
 
 class ContactView(ModelForm):

@@ -10,13 +10,12 @@ def contact(request):
         if form.is_valid():
             our_form = form.save(commit=False)
             our_form.save()
-            messages.add_message(request, messages.INFO, 'Your message has been sent. Thank you.')
-
+            messages.add_message(
+                request, messages.INFO, 'Your message has been sent. Thank you.'
+            )
             return HttpResponseRedirect('/')
-
     else:
         form = ContactView()
-
     t = loader.get_template('contact.html')
-    c = RequestContext(request, {'form': form})
+    c = RequestContext(request, {'form': form, })
     return HttpResponse(t.render(c))

@@ -35,7 +35,14 @@ def sign_in(request):
 
     print form.non_field_errors()
 
-    return render_to_response('sign_in.html', {'form': form, 'user': user}, context_instance=RequestContext(request))
+    return render_to_response(
+        'sign_in.html',
+        {
+            'form': form,
+            'user': user
+        },
+        context_instance=RequestContext(request)
+    )
 
 
 def sign_out(request):
@@ -48,20 +55,21 @@ def register(request):
     if request.method == 'POST':
         form = UserForm(request.POST)
         if form.is_valid():
-            # update based on your billing method - subscription vs one time
-            customer = stripe.Customer.create(
-                email=form.cleaned_data['email'],
-                description=form.cleaned_data['name'],
-                card=form.cleaned_data['stripe_token'],
-                plan='gold'
-            )
 
-            # customer = stripe.Charge.create(
-            #     description=form.cleaned_data['email'],
+            #update based on your billing method (subscription vs one time)
+            # customer = stripe.Customer.create(
+            #     email=form.cleaned_data['email'],
+            #     description=form.cleaned_data['name'],
             #     card=form.cleaned_data['stripe_token'],
-            #     amount=5000,
-            #     currency='usd'
+            #     plan="gold",
             # )
+
+            customer = stripe.Charge.create(
+                description=form.cleaned_data['email'],
+                card=form.cleaned_data['stripe_token'],
+                amount="5000",
+                currency="usd"
+            )
 
             user = User(
                 name=form.cleaned_data['name'],
@@ -70,13 +78,13 @@ def register(request):
                 stripe_id=customer.id,
             )
 
-            # ensure encrypted password
+            #ensure encrypted password
             user.set_password(form.cleaned_data['password'])
 
             try:
                 user.save()
             except IntegrityError:
-                form.addError(user.email + ' is already a member.')
+                form.addError(user.email + ' is already a member')
             else:
                 request.session['user'] = user.pk
                 return HttpResponseRedirect('/')
@@ -84,18 +92,23 @@ def register(request):
     else:
         form = UserForm()
 
-    return render_to_response('register.html',
-                              {'form': form,
-                               'months': range(1, 12),
-                               'publishable': settings.STRIPE_PUBLISHABLE,
-                               'soon': soon(),
-                               'user': user,
-                               'years': range(2011, 2036)},
-                              context_instance=RequestContext(request))
+    return render_to_response(
+        'register.html',
+        {
+            'form': form,
+            'months': range(1, 12),
+            'publishable': settings.STRIPE_PUBLISHABLE,
+            'soon': soon(),
+            'user': user,
+            'years': range(2011, 2036),
+        },
+        context_instance=RequestContext(request)
+    )
 
 
 def edit(request):
     uid = request.session.get('user')
+
     if uid is None:
         return HttpResponseRedirect('/')
 
@@ -104,6 +117,7 @@ def edit(request):
     if request.method == 'POST':
         form = CardForm(request.POST)
         if form.is_valid():
+
             customer = stripe.Customer.retrieve(user.stripe_id)
             customer.card = form.cleaned_data['stripe_token']
             customer.save()
@@ -117,10 +131,14 @@ def edit(request):
     else:
         form = CardForm()
 
-    return render_to_response('edit.html',
-                              {'form': form,
-                               'publishable': settings.STRIPE_PUBLISHABLE,
-                               'soon': soon(),
-                               'months': range(1, 12),
-                               'years': range(2011, 2036)},
-                              context_instance=RequestContext(request))
+    return render_to_response(
+        'edit.html',
+        {
+            'form': form,
+            'publishable': settings.STRIPE_PUBLISHABLE,
+            'soon': soon(),
+            'months': range(1, 12),
+            'years': range(2011, 2036)
+        },
+        context_instance=RequestContext(request)
+    )
